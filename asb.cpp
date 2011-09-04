@@ -26,7 +26,7 @@ int main(){
     kernel_init(&kernelEnv);
     kernel_createproc(&kernelEnv,L"a.exe");
 
-    system("pause");
+    while(TRUE);
     return 0;
 }
 

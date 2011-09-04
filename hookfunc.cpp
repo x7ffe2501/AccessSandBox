@@ -17,9 +17,19 @@ NTSTATUS WINAPI hook_ZwOpenFile(
 ){
     ULONG rl;
 
+    PCOM_ZWOPENFILE pComZwOpenFile;
+
     ULONG CallAddr;
-    
+
     WaitForSingleObjectEx(hookEnv.hPriMutex,INFINITE,FALSE);
+
+    pComZwOpenFile=(PCOM_ZWOPENFILE)hookEnv.pPriMap;
+    memcpy(pComZwOpenFile->Path,ObjectAttributes->ObjectName->Buffer,ObjectAttributes->ObjectName->Length);
+    pComZwOpenFile->Path[ObjectAttributes->ObjectName->Length/sizeof(WCHAR)]=0;
+
+    SetEvent(hookEnv.hPriReqEvent);
+    WaitForSingleObjectEx(hookEnv.hPriResEvent,INFINITE,FALSE);
+    ResetEvent(hookEnv.hPriResEvent);
 
     CallAddr=ZwOpenFileAddr+5;
     asm volatile(

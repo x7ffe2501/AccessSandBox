@@ -25,10 +25,13 @@ ULONG kernel_init(PKERNEL_ENV pKernelEnv){
 
 ULONG kernel_threading(PKERNEL_ENV pKernelEnv){
 
+    PCOM_ZWOPENFILE pComZwOpenFile;
+
     while(WaitForSingleObjectEx(pKernelEnv->hPriReqEvent,INFINITE,FALSE)==WAIT_OBJECT_0){
 	ResetEvent(pKernelEnv->hPriReqEvent);
 
-	printf("test\n");
+	pComZwOpenFile=(PCOM_ZWOPENFILE)pKernelEnv->pPriMap;
+	printf("%S\n",pComZwOpenFile->Path);
 
 	SetEvent(pKernelEnv->hPriResEvent);
     }
@@ -147,7 +150,7 @@ ULONG kernel_init_com(PKERNEL_ENV pKernelEnv){
     hPriMutex=CreateMutex(&sa,FALSE,tmpName);
 
     pKernelEnv->hPriReqEvent=hPriReqEvent;
-    pKernelEnv->hPriResEvent=hPriReqEvent;
+    pKernelEnv->hPriResEvent=hPriResEvent;
     pKernelEnv->hPriMap=hPriMap;
     pKernelEnv->pPriMap=pPriMap;
     pKernelEnv->hPriMutex=hPriMutex;
