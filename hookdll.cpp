@@ -7,6 +7,7 @@
 #include"hookdll.h"
 
 HOOK_ENV hookEnv;
+HOOK_INDEX hookIndex[HOOKINDEX_NUM];
 
 extern "C"
 BOOL WINAPI DllMain(HINSTANCE hinstDLL,DWORD fdwReason,LPVOID lpvReserved){
@@ -29,14 +30,26 @@ ULONG hookdll_init(PHOOK_ENV pHookEnv){
 }
 
 ULONG hookdll_patch(){
+    ULONG index;
     ULONG rl;
 
     UCHAR PatchCode[5]={0xE9,0x00,0x00,0x00,0x00};
 
-    ZwOpenFileAddr=(ULONG)GetProcAddress(GetModuleHandle(L"ntdll.dll"),"ZwOpenFile");
-    *(PULONG)((ULONG)PatchCode+1)=(ULONG)hook_ZwOpenFile-ZwOpenFileAddr-5;
-    VirtualProtect((PVOID)ZwOpenFileAddr,5,PAGE_EXECUTE_READWRITE,&rl); 
-    memcpy((PVOID)ZwOpenFileAddr,PatchCode,5);
+    hookIndex[HOOKINDEX_ZWOPENFILE].FuncName="ZwOpenFile";
+    hookIndex[HOOKINDEX_ZWOPENFILE].ArgNum=6;
+    hookIndex[HOOKINDEX_ZWOPENFILE].HookFuncAddr=(ULONG)hook_ZwOpenFile;
+    hookIndex[HOOKINDEX_ZWCREATEFILE].FuncName="ZwCreateFile";
+    hookIndex[HOOKINDEX_ZWCREATEFILE].ArgNum=11;
+    hookIndex[HOOKINDEX_ZWCREATEFILE].HookFuncAddr=(ULONG)hook_ZwCreateFile;
+
+    for(index=0;index<HOOKINDEX_NUM;index++){
+	hookIndex[index].FuncAddr=(ULONG)GetProcAddress(GetModuleHandle(L"ntdll.dll"),hookIndex[index].FuncName);
+	memcpy(&hookIndex[index].SSDTIndex,(PVOID)(hookIndex[index].FuncAddr+1),1);
+
+	*(PULONG)((ULONG)PatchCode+1)=hookIndex[index].HookFuncAddr-hookIndex[index].FuncAddr-5;
+	VirtualProtect((PVOID)hookIndex[index].FuncAddr,5,PAGE_EXECUTE_READWRITE,&rl); 
+	memcpy((PVOID)hookIndex[index].FuncAddr,PatchCode,5);
+    }
 
     return 0;
 }

@@ -1,5 +1,6 @@
-
 typedef ULONG NTSTATUS;
+
+NTSTATUS WINAPI CallOriFunc(ULONG HookIndex,...);
 
 typedef struct _UNICODE_STRING{
     USHORT Length;
@@ -22,7 +23,6 @@ typedef struct _IO_STATUS_BLOCK{
     ULONG_PTR Information;
 }IO_STATUS_BLOCK,*PIO_STATUS_BLOCK;
 
-extern ULONG ZwOpenFileAddr;
 NTSTATUS WINAPI hook_ZwOpenFile(
 	PHANDLE FileHandle,
 	ACCESS_MASK DesiredAccess,
@@ -30,3 +30,16 @@ NTSTATUS WINAPI hook_ZwOpenFile(
 	PIO_STATUS_BLOCK IoStatusBlock,
 	ULONG ShareAccess,
 	ULONG OpenOptions);
+
+NTSTATUS WINAPI hook_ZwCreateFile(
+	PHANDLE FileHandle,
+	ACCESS_MASK DesiredAccess,
+	POBJECT_ATTRIBUTES ObjectAttributes,
+	PIO_STATUS_BLOCK IoStatusBlock,
+	PLARGE_INTEGER AllocationSize,
+	ULONG FileAttributes,
+	ULONG ShareAccess,
+	ULONG CreateDisposition,
+	ULONG CreateOptions,
+	PVOID EaBuffer,
+	ULONG EaLength);

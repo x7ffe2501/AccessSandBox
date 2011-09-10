@@ -24,14 +24,31 @@ ULONG kernel_init(PKERNEL_ENV pKernelEnv){
 }
 
 ULONG kernel_threading(PKERNEL_ENV pKernelEnv){
+    PCOM_HEADER pComHeader;
 
     PCOM_ZWOPENFILE pComZwOpenFile;
+    PCOM_ZWCREATEFILE pComZwCreateFile;
 
     while(WaitForSingleObjectEx(pKernelEnv->hPriReqEvent,INFINITE,FALSE)==WAIT_OBJECT_0){
 	ResetEvent(pKernelEnv->hPriReqEvent);
 
-	pComZwOpenFile=(PCOM_ZWOPENFILE)pKernelEnv->pPriMap;
-	printf("%S\n",pComZwOpenFile->Path);
+	pComHeader=(PCOM_HEADER)pKernelEnv->pPriMap;
+	switch(pComHeader->Type){
+	    case COMTYPE_ZWOPENFILE:
+		pComZwOpenFile=(PCOM_ZWOPENFILE)pKernelEnv->pPriMap;
+		
+		printf("ZwOpenFile: %S\n",pComZwOpenFile->Path);
+
+		break;
+	    case COMTYPE_ZWCREATEFILE:
+		pComZwCreateFile=(PCOM_ZWCREATEFILE)pKernelEnv->pPriMap;
+
+		printf("ZwCreatefile: %S\n",pComZwCreateFile->Path);
+
+		break;
+	    default:
+		break;
+	}
 
 	SetEvent(pKernelEnv->hPriResEvent);
     }
@@ -86,6 +103,7 @@ ULONG kernel_addproc(PKERNEL_ENV pKernelEnv,PPROCESS_ENV pProcEnv){
     kernel_patchimport(pProcEnv);
 
     pComInit=(PCOM_INIT)pKernelEnv->pPubMap;
+    pComInit->Header.Type=COMTYPE_INIT;
     wcscpy(pComInit->KernelID,pKernelEnv->KernelID);
 
     ResetEvent(pKernelEnv->hPubResEvent);
